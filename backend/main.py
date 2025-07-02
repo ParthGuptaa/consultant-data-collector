@@ -78,3 +78,8 @@ async def export_data(spec: Spec):
         filename=filename,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+
+@app.get("/")
+def root():
+    return {"message": "Consultant Data Collector API is running"}
