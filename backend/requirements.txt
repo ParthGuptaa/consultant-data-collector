@@ -4,4 +4,6 @@ pandas
 openpyxl
 wikipedia
 requests
-openpyxl
+transformers
+torch
+transformers
