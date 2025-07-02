@@ -1,5 +1,3 @@
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="wikipedia")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -8,13 +6,13 @@ from typing import List
 import pandas as pd
 import requests
 import wikipedia
-import os
+from transformers import pipeline
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or restrict to your frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,46 +22,41 @@ class Spec(BaseModel):
     query: str
     fields: List[str]
 
+# Load BART summarizer
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+
 @app.post("/collect")
 async def collect_data(spec: Spec):
-    results = []
+    sources = []
 
-    # Wikipedia agent
     try:
-        summary = wikipedia.summary(spec.query, sentences=2)
-        results.append({"source": "Wikipedia", "summary": summary})
+        wiki = wikipedia.summary(spec.query, sentences=2)
+        sources.append(f"Wikipedia: {wiki}")
     except:
         pass
 
-    # News API agent (replace with your key)
-    try:
-        news = requests.get(
-            f"https://newsapi.org/v2/everything?q={spec.query}&apiKey=1006582b26d84b558d345672f0938701"
-        ).json()
-        if news.get("articles"):
-            results.append({
-                "source": "NewsAPI",
-                "summary": news["articles"][0]["description"]
-            })
-    except:
-        pass
-
-    # DuckDuckGo agent
     try:
         ddg = requests.get(f"https://api.duckduckgo.com/?q={spec.query}&format=json").json()
         if ddg.get("AbstractText"):
-            results.append({"source": "DuckDuckGo", "summary": ddg["AbstractText"]})
+            sources.append(f"DuckDuckGo: {ddg['AbstractText']}")
     except:
         pass
 
-    # Format into field-based rows
-    data = []
-    for i, r in enumerate(results):
-        row = {f: f"{r['summary'][:100]}..." for f in spec.fields}
-        row["source"] = r["source"]
-        data.append(row)
+    try:
+        news = requests.get(f"https://newsapi.org/v2/everything?q={spec.query}&apiKey=demo").json()
+        if news.get("articles"):
+            sources.append(f"NewsAPI: {news['articles'][0]['description']}")
+    except:
+        pass
 
-    return {"data": data}
+    combined = "\n".join(sources) or "No data found."
+
+    summary = summarizer(combined, max_length=200, min_length=50, do_sample=False)[0]["summary_text"]
+
+    return {
+        "sources": sources,
+        "summary": summary
+    }
 
 @app.post("/export")
 async def export_data(spec: Spec):
@@ -79,7 +72,4 @@ async def export_data(spec: Spec):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-
-@app.get("/")
-def root():
-    return {"message": "Consultant Data Collector API is running"}
+summary = summarizer(combined, max_length=200, min_length=50, do_sample=False)[0]["summary_text"]
