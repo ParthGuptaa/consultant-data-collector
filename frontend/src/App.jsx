@@ -19,7 +19,7 @@ export default function App() {
       );
       setData(resp.data.data || []);
     } catch (error) {
-      alert("❌ Failed to collect data.");
+      console.error("Collection failed:", error);
     }
     setLoading(false);
   };
@@ -41,71 +41,32 @@ export default function App() {
       a.download = "output.xlsx";
       a.click();
     } catch (error) {
-      alert("❌ Failed to download Excel file.");
+      console.error("Export failed:", error);
     }
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif", maxWidth: "720px", margin: "0 auto" }}>
+    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>📊 Consultant Data Collector</h1>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <input
-          placeholder="🔍 Research query"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          style={{
-            marginRight: "0.5rem",
-            padding: "0.5rem",
-            width: "320px",
-            border: "1px solid #ccc",
-            borderRadius: "4px"
-          }}
-        />
-        <input
-          placeholder=" Fields (comma-separated)"
-          value={fields}
-          onChange={(e) => setFields(e.target.value)}
-          style={{
-            padding: "0.5rem",
-            width: "320px",
-            border: "1px solid #ccc",
-            borderRadius: "4px"
-          }}
-        />
-      </div>
-
-      <div>
-        <button
-          onClick={runCollect}
-          style={{
-            marginRight: "1rem",
-            padding: "0.6rem 1.2rem",
-            backgroundColor: "#007bff",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
-        >
+      <input
+        placeholder="Research query"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ margin: "0.5rem", padding: "0.5rem", width: "300px" }}
+      />
+      <input
+        placeholder="Fields (comma separated)"
+        value={fields}
+        onChange={(e) => setFields(e.target.value)}
+        style={{ margin: "0.5rem", padding: "0.5rem", width: "300px" }}
+      />
+      <div style={{ marginTop: "1rem" }}>
+        <button onClick={runCollect} style={{ marginRight: "1rem" }}>
           {loading ? "Collecting..." : "Collect Data"}
         </button>
-        <button
-          onClick={handleExport}
-          style={{
-            padding: "0.6rem 1.2rem",
-            backgroundColor: "#28a745",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
-        >
-          Download Excel
-        </button>
+        <button onClick={handleExport}>Download Excel</button>
       </div>
-
-      <pre style={{ marginTop: "2rem", background: "#f9f9f9", padding: "1rem", borderRadius: "4px" }}>
+      <pre style={{ marginTop: "2rem", background: "#f4f4f4", padding: "1rem" }}>
         {JSON.stringify(data, null, 2)}
       </pre>
     </div>
