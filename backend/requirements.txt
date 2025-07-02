@@ -1,9 +1,7 @@
 fastapi
 uvicorn
+requests
+wikipedia
 pandas
 openpyxl
-wikipedia
-requests
-transformers
-torch
-transformers
+sumy

@@ -6,7 +6,9 @@ from typing import List
 import pandas as pd
 import requests
 import wikipedia
-from transformers import pipeline
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer
 
 app = FastAPI()
 
@@ -22,8 +24,11 @@ class Spec(BaseModel):
     query: str
     fields: List[str]
 
-# Load BART summarizer
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+def summarize_text(text):
+    parser = PlaintextParser.from_string(text, Tokenizer("english"))
+    summarizer = LsaSummarizer()
+    summary = summarizer(parser.document, 3)
+    return " ".join(str(sentence) for sentence in summary)
 
 @app.post("/collect")
 async def collect_data(spec: Spec):
@@ -42,16 +47,8 @@ async def collect_data(spec: Spec):
     except:
         pass
 
-    try:
-        news = requests.get(f"https://newsapi.org/v2/everything?q={spec.query}&apiKey=demo").json()
-        if news.get("articles"):
-            sources.append(f"NewsAPI: {news['articles'][0]['description']}")
-    except:
-        pass
-
     combined = "\n".join(sources) or "No data found."
-
-    summary = summarizer(combined, max_length=200, min_length=50, do_sample=False)[0]["summary_text"]
+    summary = summarize_text(combined)
 
     return {
         "sources": sources,
@@ -72,4 +69,6 @@ async def export_data(spec: Spec):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-summary = summarizer(combined, max_length=200, min_length=50, do_sample=False)[0]["summary_text"]
+@app.get("/")
+def root():
+    return {"message": "Backend is alive"}
