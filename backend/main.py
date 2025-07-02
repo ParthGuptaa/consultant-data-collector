@@ -1,3 +1,5 @@
+import nltk
+nltk.download("punkt")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -29,6 +31,15 @@ def summarize_text(text):
     summarizer = LsaSummarizer()
     summary = summarizer(parser.document, 3)
     return " ".join(str(sentence) for sentence in summary)
+
+def summarize_text(text):
+    if not text.strip():
+        return "No content available to summarize."
+    parser = PlaintextParser.from_string(text, Tokenizer("english"))
+    summarizer = LsaSummarizer()
+    summary = summarizer(parser.document, 3)
+    return " ".join(str(sentence) for sentence in summary)
+
 
 @app.post("/collect")
 async def collect_data(spec: Spec):
