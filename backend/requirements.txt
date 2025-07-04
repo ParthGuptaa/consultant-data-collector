@@ -1,4 +1,3 @@
-nltk
 fastapi
 uvicorn
 requests
@@ -6,3 +5,4 @@ wikipedia
 pandas
 openpyxl
 sumy
+nltk
