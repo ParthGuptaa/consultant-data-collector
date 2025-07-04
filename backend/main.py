@@ -37,6 +37,7 @@ def summarize_text(text):
     summary = summarizer(parser.document, 3)
     return " ".join(str(sentence) for sentence in summary)
 
+
 @app.post("/collect")
 async def collect_data(spec: Spec):
     sources = []
